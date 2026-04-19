@@ -517,13 +517,24 @@ function clearForm() {
     ['f-visitors','f-signups','f-activity','f-activity-own','f-members','f-mrr']
         .forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('duplicate-hint').style.display = 'none';
+    document.getElementById('f-date').value = today();
 }
 
-// Duplicate hint
+// Beim Datumswechsel: vorhandene Werte ins Formular laden
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('f-date').addEventListener('change', e => {
-        const exists = records.some(r => r.date === e.target.value);
-        document.getElementById('duplicate-hint').style.display = exists ? '' : 'none';
+        const existing = records.find(r => r.date === e.target.value);
+        document.getElementById('duplicate-hint').style.display = existing ? '' : 'none';
+        if (existing) {
+            document.getElementById('f-visitors').value     = existing.visitors     ?? '';
+            document.getElementById('f-signups').value      = existing.signups      ?? '';
+            document.getElementById('f-activity').value     = existing.activity     ?? '';
+            document.getElementById('f-activity-own').value = existing.activity_own ?? '';
+            document.getElementById('f-members').value      = existing.members      ?? '';
+            document.getElementById('f-mrr').value          = existing.mrr          ?? '';
+        } else {
+            clearForm();
+        }
     });
 });
 
@@ -535,7 +546,7 @@ function editEntry(i) {
     document.getElementById('m-visitors').value     = r.visitors;
     document.getElementById('m-signups').value      = r.signups;
     document.getElementById('m-activity').value     = r.activity;
-    document.getElementById('m-activity-own').value = r.activity_own;
+    document.getElementById('m-activity-own').value = r.activity_own ?? 0;
     document.getElementById('m-members').value      = r.members;
     document.getElementById('m-mrr').value          = r.mrr;
     document.getElementById('edit-modal').classList.add('open');
