@@ -438,7 +438,7 @@ let overviewVisible = Object.fromEntries(METRICS.map(m => [m.key, true]));
 async function loadData() {
     const { data, error } = await sb
         .from('tracker_entries')
-        .select('date, visitors, signups, activity, members, mrr')
+        .select('date, visitors, signups, activity, activity_own, members, mrr')
         .order('date', { ascending: true });
     if (error) { toast('Verbindungsfehler: ' + error.message); return; }
     records = data;
