@@ -74,7 +74,7 @@
         /* ── KPI Grid ── */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 0.875rem;
             margin-bottom: 1.75rem;
         }
@@ -127,7 +127,7 @@
 
         .form-row {
             display: grid;
-            grid-template-columns: 150px repeat(5, 1fr) auto;
+            grid-template-columns: 150px repeat(6, 1fr) auto;
             gap: 0.75rem;
             align-items: end;
         }
@@ -248,7 +248,7 @@
         .toast.show { transform: translateY(0); opacity: 1; }
 
         /* ── Responsive ── */
-        @media (max-width: 1100px) {
+        @media (max-width: 1200px) {
             .kpi-grid { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
@@ -308,8 +308,12 @@
                 <input type="number" class="form-input" id="f-signups" placeholder="0" min="0">
             </div>
             <div class="form-group">
-                <label class="form-label">Aktivität</label>
+                <label class="form-label">Gruppen-Aktivität</label>
                 <input type="number" class="form-input" id="f-activity" placeholder="0" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Eigene Aktivität</label>
+                <input type="number" class="form-input" id="f-activity-own" placeholder="0" min="0">
             </div>
             <div class="form-group">
                 <label class="form-label">Mitglieder</label>
@@ -377,8 +381,12 @@
                 <input type="number" class="form-input" id="m-signups" min="0">
             </div>
             <div class="form-group">
-                <label class="form-label">Aktivität</label>
+                <label class="form-label">Gruppen-Aktivität</label>
                 <input type="number" class="form-input" id="m-activity" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Eigene Aktivität</label>
+                <input type="number" class="form-input" id="m-activity-own" min="0">
             </div>
             <div class="form-group">
                 <label class="form-label">Mitglieder</label>
@@ -403,11 +411,12 @@
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
 const METRICS = [
-    { key: 'visitors', label: 'About-Besucher', color: '#6366F1', prefix: '',  suffix: '' },
-    { key: 'signups',  label: 'Sign-Ups',       color: '#10B981', prefix: '',  suffix: '' },
-    { key: 'activity', label: 'Aktivität',      color: '#F59E0B', prefix: '',  suffix: '' },
-    { key: 'members',  label: 'Mitglieder',     color: '#3B82F6', prefix: '',  suffix: '' },
-    { key: 'mrr',      label: 'MRR',            color: '#8B5CF6', prefix: '$', suffix: '' },
+    { key: 'visitors',     label: 'About-Besucher',    color: '#6366F1', prefix: '',  suffix: '' },
+    { key: 'signups',     label: 'Sign-Ups',          color: '#10B981', prefix: '',  suffix: '' },
+    { key: 'activity',    label: 'Gruppen-Aktivität', color: '#F59E0B', prefix: '',  suffix: '' },
+    { key: 'activity_own',label: 'Eigene Aktivität',  color: '#F97316', prefix: '',  suffix: '' },
+    { key: 'members',     label: 'Mitglieder',        color: '#3B82F6', prefix: '',  suffix: '' },
+    { key: 'mrr',         label: 'MRR',               color: '#8B5CF6', prefix: '$', suffix: '' },
 ];
 
 // ── SUPABASE ─────────────────────────────────────────────────
@@ -484,11 +493,12 @@ async function saveEntry() {
 
     const entry = {
         date,
-        visitors: +document.getElementById('f-visitors').value || 0,
-        signups:  +document.getElementById('f-signups').value  || 0,
-        activity: +document.getElementById('f-activity').value || 0,
-        members:  +document.getElementById('f-members').value  || 0,
-        mrr:      +document.getElementById('f-mrr').value      || 0,
+        visitors:     +document.getElementById('f-visitors').value     || 0,
+        signups:      +document.getElementById('f-signups').value      || 0,
+        activity:     +document.getElementById('f-activity').value     || 0,
+        activity_own: +document.getElementById('f-activity-own').value || 0,
+        members:      +document.getElementById('f-members').value      || 0,
+        mrr:          +document.getElementById('f-mrr').value          || 0,
     };
 
     const { error } = await sb
@@ -504,7 +514,7 @@ async function saveEntry() {
 }
 
 function clearForm() {
-    ['f-visitors','f-signups','f-activity','f-members','f-mrr']
+    ['f-visitors','f-signups','f-activity','f-activity-own','f-members','f-mrr']
         .forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('duplicate-hint').style.display = 'none';
 }
@@ -521,12 +531,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function editEntry(i) {
     editIdx = i;
     const r = records[i];
-    document.getElementById('m-date').value     = r.date;
-    document.getElementById('m-visitors').value = r.visitors;
-    document.getElementById('m-signups').value  = r.signups;
-    document.getElementById('m-activity').value = r.activity;
-    document.getElementById('m-members').value  = r.members;
-    document.getElementById('m-mrr').value      = r.mrr;
+    document.getElementById('m-date').value         = r.date;
+    document.getElementById('m-visitors').value     = r.visitors;
+    document.getElementById('m-signups').value      = r.signups;
+    document.getElementById('m-activity').value     = r.activity;
+    document.getElementById('m-activity-own').value = r.activity_own;
+    document.getElementById('m-members').value      = r.members;
+    document.getElementById('m-mrr').value          = r.mrr;
     document.getElementById('edit-modal').classList.add('open');
 }
 
@@ -534,12 +545,13 @@ async function saveEdit() {
     if (editIdx === null) return;
     const originalDate = records[editIdx].date;
     const updated = {
-        date:     document.getElementById('m-date').value,
-        visitors: +document.getElementById('m-visitors').value || 0,
-        signups:  +document.getElementById('m-signups').value  || 0,
-        activity: +document.getElementById('m-activity').value || 0,
-        members:  +document.getElementById('m-members').value  || 0,
-        mrr:      +document.getElementById('m-mrr').value      || 0,
+        date:         document.getElementById('m-date').value,
+        visitors:     +document.getElementById('m-visitors').value     || 0,
+        signups:      +document.getElementById('m-signups').value      || 0,
+        activity:     +document.getElementById('m-activity').value     || 0,
+        activity_own: +document.getElementById('m-activity-own').value || 0,
+        members:      +document.getElementById('m-members').value      || 0,
+        mrr:          +document.getElementById('m-mrr').value          || 0,
     };
 
     const { error } = await sb
@@ -884,6 +896,7 @@ function renderTable() {
             <td>${fNum(r.visitors)}</td>
             <td>${fNum(r.signups)}</td>
             <td>${fNum(r.activity)}</td>
+            <td>${fNum(r.activity_own)}</td>
             <td>${fNum(r.members)}</td>
             <td>${fNum(r.mrr, '$', true)}</td>
             <td>
@@ -902,7 +915,8 @@ function renderTable() {
                 <th>Datum</th>
                 <th>About-Besucher</th>
                 <th>Sign-Ups</th>
-                <th>Aktivität</th>
+                <th>Gruppen-Aktivität</th>
+                <th>Eigene Aktivität</th>
                 <th>Mitglieder</th>
                 <th>MRR</th>
                 <th></th>
